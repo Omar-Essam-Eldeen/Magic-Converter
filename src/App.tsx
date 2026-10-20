@@ -14,6 +14,8 @@ import {
 import { applyNamePattern } from './lib/naming';
 import { explainError } from './lib/errors';
 import { takeSharedFiles } from './lib/shareInbox';
+import Logo, { LogoGlyph } from './components/Logo';
+import CategoryIcon from './components/CategoryIcon';
 
 /* ---------------- prefs ---------------- */
 
@@ -627,10 +629,7 @@ export default function App() {
       <header className="topbar">
         <div className="brand">
           <span className="brand-mark" aria-hidden="true">
-            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M4 7h13" /><path d="M13 3l4 4-4 4" />
-              <path d="M20 17H7" /><path d="M11 13l-4 4 4 4" />
-            </svg>
+            <Logo size={42} />
           </span>
           <div>
             <div className="brand-name">
@@ -851,14 +850,9 @@ export default function App() {
                   <circle cx="112" cy="70" r="3.5" className="art-dot" />
                 </g>
                 <g className="fl-c">
-                  <circle cx="70" cy="12" r="13" className="art-badge" />
-                  <path
-                    d="M64.5 9.5h6.5M68.8 6.3l3 3.2-3 3.2M75.5 15.5h-6.5M71.2 12.3l-3 3.2 3 3.2"
-                    stroke="#fff"
-                    strokeWidth="1.9"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
+                  <svg className="logo-badge" x="56" y="-2" width="28" height="28" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+                    <LogoGlyph />
+                  </svg>
                 </g>
               </svg>
               <p className="empty">{t.queueEmpty}</p>
@@ -869,10 +863,13 @@ export default function App() {
                 <li key={item.id} className="q-item">
                   <div className="q-main">
                     <div className="q-file">
-                      <span className="q-name">{item.file.name}</span>
-                      <span className="q-meta">
-                        {formatSize(item.file.size)} · {t.category[item.category]}
-                      </span>
+                      <CategoryIcon category={item.category} />
+                      <div className="q-file-text">
+                        <span className="q-name">{item.file.name}</span>
+                        <span className="q-meta">
+                          {formatSize(item.file.size)} · {t.category[item.category]}
+                        </span>
+                      </div>
                     </div>
                     <div className="q-route">
                       <span className="chip chip-from">{extOf(item.file.name).toUpperCase() || '—'}</span>

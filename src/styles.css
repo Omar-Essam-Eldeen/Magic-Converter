@@ -86,11 +86,10 @@ body {
 }
 .brand { display: flex; gap: 12px; align-items: center; }
 .brand-mark {
-  width: 42px; height: 42px; border-radius: 11px;
+  width: 42px; height: 42px; flex: none;
   display: grid; place-items: center;
-  background: linear-gradient(160deg, var(--accent-strong), var(--accent));
-  color: #fff; box-shadow: 0 6px 16px rgba(242, 118, 10, 0.35);
 }
+.brand-mark svg { display: block; filter: drop-shadow(0 6px 14px rgba(242, 118, 10, 0.35)); }
 .brand-name { font-size: 20px; font-weight: 800; letter-spacing: -0.02em; }
 .brand-accent { color: var(--accent); }
 .brand-tag { color: var(--muted); font-size: 13px; margin-top: 1px; max-width: 46ch; }
@@ -193,7 +192,8 @@ body {
   padding: 12px; animation: rise 0.2s ease;
 }
 .q-main { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; }
-.q-file { display: flex; flex-direction: column; min-width: 170px; flex: 1 1 190px; }
+.q-file { display: flex; flex-direction: row; align-items: center; gap: 10px; min-width: 170px; flex: 1 1 190px; }
+.q-file-text { display: flex; flex-direction: column; min-width: 0; flex: 1; }
 .q-name { font-weight: 600; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .q-meta { color: var(--muted); font-size: 12px; margin-top: 2px; }
 .q-route { display: flex; align-items: center; gap: 8px; }
@@ -471,6 +471,9 @@ html, body { overflow-x: clip; }
   fill: var(--accent);
   filter: drop-shadow(0 4px 10px rgba(242, 118, 10, 0.45));
 }
+.empty-art .logo-badge {
+  filter: drop-shadow(0 4px 10px rgba(242, 118, 10, 0.45));
+}
 .empty-art .fl-a, .empty-art .fl-b, .empty-art .fl-c {
   transform-box: fill-box;
   transform-origin: center;
@@ -492,3 +495,23 @@ html, body { overflow-x: clip; }
   .primary-btn:hover, .dl-btn:hover { transform: none; }
 }
 
+
+/* ---------- v1.3: Brand & artwork ---------- */
+
+/* Category icons: slate base via currentColor, one tangerine motif.
+   currentColor comes from .cat-icon's colour (muted slate, theme-aware);
+   --accent is the same tangerine in both themes. */
+.cat-icon { color: var(--muted); flex: none; display: block; }
+.cat-icon .ci-base {
+  fill: none; stroke: currentColor; stroke-width: 1.7;
+  stroke-linecap: round; stroke-linejoin: round;
+}
+.cat-icon .ci-grid { stroke-width: 1.3; }
+.cat-icon .ci-motif {
+  fill: none; stroke: var(--accent); stroke-width: 1.7;
+  stroke-linecap: round; stroke-linejoin: round;
+}
+.cat-icon .ci-motif-wave { stroke-width: 1.9; }
+.cat-icon .ci-motif-fill {
+  fill: var(--accent); stroke: var(--accent); stroke-width: 1.1; stroke-linejoin: round;
+}
