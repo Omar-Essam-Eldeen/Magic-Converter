@@ -236,7 +236,7 @@ export default function App() {
      (mouse/pen) on hover-capable devices, never under reduced-motion,
      and paused while a drag hovers the zone. Purely decorative: all
      existing click / keyboard / drag behaviour is untouched. */
-  const dzRef = useRef<HTMLElement | null>(null);
+  const dzRef = useRef<HTMLDivElement | null>(null);
   const dragRef = useRef(false);
   const tiltRef = useRef({ raf: 0, cx: 0, cy: 0, tx: 0, ty: 0, running: false });
 
@@ -632,9 +632,9 @@ export default function App() {
             <Logo size={42} />
           </span>
           <div>
-            <div className="brand-name">
+            <h1 className="brand-name">
               {t.appName} <span className="brand-accent">— {t.appBrand}</span>
-            </div>
+            </h1>
             <div className="brand-tag">{t.tagline}</div>
           </div>
         </div>
@@ -664,12 +664,11 @@ export default function App() {
       </header>
 
       <main>
-        <section
+        <div
           ref={dzRef}
           className={`dropzone${dragOver ? ' drag' : ''}`}
           role="button"
           tabIndex={0}
-          aria-labelledby="dz-title dz-hint"
           onClick={() => fileInputRef.current?.click()}
           onPointerMove={onDzPointerMove}
           onPointerLeave={onDzPointerLeave}
@@ -693,9 +692,9 @@ export default function App() {
               <path d="M12 3v10" /><path d="M7 8l5-5 5 5" /><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" />
             </svg>
           </div>
-          <div className="dz-title" id="dz-title">{dragOver ? t.dropActive : t.dropTitle}</div>
-          <div className="dz-hint" id="dz-hint">{t.dropHint}</div>
-        </section>
+          <div className="dz-title">{dragOver ? t.dropActive : t.dropTitle}</div>
+          <div className="dz-hint">{t.dropHint}</div>
+        </div>
         <input
           ref={fileInputRef}
           type="file"

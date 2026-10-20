@@ -90,7 +90,7 @@ body {
   display: grid; place-items: center;
 }
 .brand-mark svg { display: block; filter: drop-shadow(0 6px 14px rgba(242, 118, 10, 0.35)); }
-.brand-name { font-size: 20px; font-weight: 800; letter-spacing: -0.02em; }
+.brand-name { font-size: 20px; font-weight: 800; letter-spacing: -0.02em; margin: 0; }
 .brand-accent { color: var(--accent); }
 .brand-tag { color: var(--muted); font-size: 13px; margin-top: 1px; max-width: 46ch; }
 .top-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
