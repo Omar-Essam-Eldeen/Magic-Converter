@@ -229,6 +229,85 @@ export default function App() {
     setArmedState(a);
   }, []);
 
+  /* ----- drop-zone 3D tilt + shine (v1.2, design only) -----
+     Gentle pointer-driven tilt, lerped via rAF. Only for fine pointers
+     (mouse/pen) on hover-capable devices, never under reduced-motion,
+     and paused while a drag hovers the zone. Purely decorative: all
+     existing click / keyboard / drag behaviour is untouched. */
+  const dzRef = useRef<HTMLElement | null>(null);
+  const dragRef = useRef(false);
+  const tiltRef = useRef({ raf: 0, cx: 0, cy: 0, tx: 0, ty: 0, running: false });
+
+  const tiltStep = useCallback(() => {
+    const el = dzRef.current;
+    const s = tiltRef.current;
+    if (!el) {
+      s.running = false;
+      return;
+    }
+    s.cx += (s.tx - s.cx) * 0.14;
+    s.cy += (s.ty - s.cy) * 0.14;
+    const settled =
+      Math.abs(s.tx - s.cx) < 0.02 && Math.abs(s.ty - s.cy) < 0.02;
+    if (settled) {
+      // Park at the target angle (or clear fully when back to flat);
+      // the next pointer move re-kicks the loop.
+      if (s.tx === 0 && s.ty === 0) {
+        el.style.transform = '';
+        el.classList.remove('tilt-on');
+      } else {
+        el.style.transform = `perspective(900px) rotateX(${s.ty.toFixed(2)}deg) rotateY(${s.tx.toFixed(2)}deg)`;
+      }
+      s.running = false;
+      return;
+    }
+    el.style.transform = `perspective(900px) rotateX(${s.cy.toFixed(2)}deg) rotateY(${s.cx.toFixed(2)}deg)`;
+    s.raf = requestAnimationFrame(tiltStep);
+  }, []);
+
+  const tiltKick = useCallback(() => {
+    const s = tiltRef.current;
+    if (!s.running) {
+      s.running = true;
+      s.raf = requestAnimationFrame(tiltStep);
+    }
+  }, [tiltStep]);
+
+  useEffect(
+    () => () => {
+      if (tiltRef.current.raf) cancelAnimationFrame(tiltRef.current.raf);
+      tiltRef.current.running = false;
+    },
+    [],
+  );
+
+  const tiltAllowed = () =>
+    typeof window !== 'undefined' &&
+    window.matchMedia('(hover: hover) and (pointer: fine)').matches &&
+    !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const onDzPointerMove = (e: React.PointerEvent<HTMLElement>) => {
+    const el = dzRef.current;
+    if (!el || dragRef.current || !tiltAllowed()) return;
+    const rect = el.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) return;
+    const px = (e.clientX - rect.left) / rect.width;
+    const py = (e.clientY - rect.top) / rect.height;
+    el.style.setProperty('--mx', `${(px * 100).toFixed(1)}%`);
+    el.style.setProperty('--my', `${(py * 100).toFixed(1)}%`);
+    el.classList.add('tilt-on');
+    // Max ±4° on each axis.
+    tiltRef.current.tx = (px - 0.5) * 8;
+    tiltRef.current.ty = (0.5 - py) * 8;
+    tiltKick();
+  };
+
+  const onDzPointerLeave = () => {
+    tiltRef.current.tx = 0;
+    tiltRef.current.ty = 0;
+    tiltKick(); // eases back to flat, then clears the inline transform
+  };
+
   const lang = prefs.lang;
   const t = STRINGS[lang];
   const adv = prefs.advanced;
@@ -544,6 +623,7 @@ export default function App() {
 
   return (
     <div className="app">
+      <div className="aurora" aria-hidden="true" />
       <header className="topbar">
         <div className="brand">
           <span className="brand-mark" aria-hidden="true">
@@ -586,21 +666,25 @@ export default function App() {
 
       <main>
         <section
+          ref={dzRef}
           className={`dropzone${dragOver ? ' drag' : ''}`}
           role="button"
           tabIndex={0}
           aria-label={t.dropTitle}
           onClick={() => fileInputRef.current?.click()}
+          onPointerMove={onDzPointerMove}
+          onPointerLeave={onDzPointerLeave}
           onKeyDown={(e) => {
             if (e.key === 'Enter' || e.key === ' ') {
               e.preventDefault();
               fileInputRef.current?.click();
             }
           }}
-          onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-          onDragLeave={() => setDragOver(false)}
+          onDragOver={(e) => { e.preventDefault(); dragRef.current = true; setDragOver(true); }}
+          onDragLeave={() => { dragRef.current = false; setDragOver(false); }}
           onDrop={(e) => {
             e.preventDefault();
+            dragRef.current = false;
             setDragOver(false);
             if (e.dataTransfer.files.length) addFiles(e.dataTransfer.files);
           }}
@@ -749,7 +833,36 @@ export default function App() {
           </div>
 
           {items.length === 0 ? (
-            <p className="empty">{t.queueEmpty}</p>
+            <div className="empty-state">
+              <svg
+                className="empty-art"
+                viewBox="0 0 140 96"
+                fill="none"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <g className="fl-b">
+                  <rect x="16" y="20" width="54" height="66" rx="9" className="art-card-back" />
+                  <path d="M28 40h30M28 52h30M28 64h20" className="art-line-muted" strokeWidth="4" strokeLinecap="round" />
+                </g>
+                <g className="fl-a">
+                  <rect x="70" y="14" width="54" height="66" rx="9" className="art-card-front" />
+                  <path d="M82 34h30M82 46h30M82 58h20" className="art-line-accent" strokeWidth="4" strokeLinecap="round" />
+                  <circle cx="112" cy="70" r="3.5" className="art-dot" />
+                </g>
+                <g className="fl-c">
+                  <circle cx="70" cy="12" r="13" className="art-badge" />
+                  <path
+                    d="M64.5 9.5h6.5M68.8 6.3l3 3.2-3 3.2M75.5 15.5h-6.5M71.2 12.3l-3 3.2 3 3.2"
+                    stroke="#fff"
+                    strokeWidth="1.9"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </g>
+              </svg>
+              <p className="empty">{t.queueEmpty}</p>
+            </div>
           ) : (
             <ul className="queue-list">
               {items.map((item) => (

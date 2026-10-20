@@ -19,6 +19,15 @@ html[data-theme='dark'] {
   --err: #ff6b6b;
   --chip: #1d2434;
   --shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+  /* v1.2 Cinematic Layers */
+  --glass-bg: rgba(18, 22, 31, 0.74);
+  --glass-border: rgba(255, 255, 255, 0.09);
+  --shadow-soft: 0 2px 10px rgba(0, 0, 0, 0.35);
+  --aurora-a: rgba(242, 118, 10, 0.5);
+  --aurora-b: rgba(224, 90, 0, 0.42);
+  --aurora-c: rgba(255, 170, 40, 0.32);
+  --aurora-opacity: 0.8;
+  --track-inset: rgba(0, 0, 0, 0.35);
 }
 
 html[data-theme='light'] {
@@ -36,6 +45,15 @@ html[data-theme='light'] {
   --err: #d64545;
   --chip: #eef1f7;
   --shadow: 0 12px 28px rgba(28, 35, 49, 0.08);
+  /* v1.2 Cinematic Layers — much paler, softer wash */
+  --glass-bg: rgba(255, 255, 255, 0.78);
+  --glass-border: rgba(28, 35, 49, 0.09);
+  --shadow-soft: 0 2px 10px rgba(28, 35, 49, 0.06);
+  --aurora-a: rgba(242, 118, 10, 0.3);
+  --aurora-b: rgba(255, 138, 42, 0.24);
+  --aurora-c: rgba(255, 190, 80, 0.28);
+  --aurora-opacity: 0.5;
+  --track-inset: rgba(28, 35, 49, 0.16);
 }
 
 * { box-sizing: border-box; }
@@ -292,3 +310,185 @@ body {
     scroll-behavior: auto !important;
   }
 }
+
+/* ---------- v1.2: Cinematic Layers (design only) ---------- */
+
+/* Belt-and-braces: decorative layers must never cause horizontal scroll. */
+html, body { overflow-x: clip; }
+
+/* Content sits above the fixed aurora field. */
+.app { position: relative; z-index: 1; }
+
+/* --- 1. Tangerine aurora field --- */
+.aurora {
+  position: fixed;
+  top: -24vh;
+  left: 50%;
+  width: 130vw;
+  max-width: 1600px;
+  height: 74vh;
+  min-height: 380px;
+  transform: translateX(-50%);
+  background:
+    radial-gradient(closest-side, var(--aurora-a), transparent 70%) 16% 32% / 55% 85% no-repeat,
+    radial-gradient(closest-side, var(--aurora-b), transparent 70%) 60% 12% / 48% 78% no-repeat,
+    radial-gradient(closest-side, var(--aurora-c), transparent 70%) 90% 46% / 42% 70% no-repeat;
+  filter: blur(56px) saturate(1.25);
+  opacity: var(--aurora-opacity);
+  pointer-events: none;
+  z-index: 0;
+  animation: aurora-drift 34s ease-in-out infinite alternate;
+}
+@keyframes aurora-drift {
+  from { transform: translateX(-52%) translateY(0) scale(1); }
+  to { transform: translateX(-48%) translateY(2.5vh) scale(1.06); }
+}
+
+/* --- 2. Glass cards --- */
+@supports ((backdrop-filter: blur(14px)) or (-webkit-backdrop-filter: blur(14px))) {
+  .card {
+    background: var(--glass-bg);
+    border-color: var(--glass-border);
+    box-shadow: var(--shadow), var(--shadow-soft);
+    backdrop-filter: blur(14px) saturate(1.3);
+    -webkit-backdrop-filter: blur(14px) saturate(1.3);
+  }
+}
+
+/* --- 3. Drop-zone tilt + shine ---
+   The transform is driven inline by JS (rAF-lerped). While tilting, the
+   transform transition is removed so it never fights the lerp; the shine
+   lives on ::after (never overflow:hidden on the focusable element, so
+   the focus outline is never clipped). */
+.dropzone { position: relative; }
+.dropzone.tilt-on {
+  transition: border-color 0.15s ease, background 0.15s ease;
+  will-change: transform;
+}
+.dropzone::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  background: radial-gradient(
+    340px circle at var(--mx, 50%) var(--my, 50%),
+    rgba(255, 255, 255, 0.16),
+    transparent 65%
+  );
+}
+@media (hover: hover) and (pointer: fine) {
+  .dropzone:hover::after { opacity: 1; }
+}
+
+/* --- 4. Primary actions: sheen sweep + lift --- */
+.primary-btn, .dl-btn { position: relative; overflow: hidden; }
+.primary-btn {
+  transition: transform 0.15s ease, filter 0.15s ease, box-shadow 0.2s ease;
+}
+.primary-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 26px rgba(242, 118, 10, 0.42);
+}
+.primary-btn:active { transform: translateY(0) scale(0.98); }
+.dl-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-soft);
+}
+.dl-btn:active { transform: scale(0.97); }
+.primary-btn::after, .dl-btn::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 55%;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+  transform: translateX(-180%) skewX(-18deg);
+  transition: transform 0.65s ease;
+  pointer-events: none;
+}
+.primary-btn:hover::after, .dl-btn:hover::after {
+  transform: translateX(240%) skewX(-18deg);
+}
+
+/* --- 5. Progress with depth --- */
+.progress {
+  box-shadow:
+    inset 0 1px 3px var(--track-inset),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.04);
+}
+.progress .bar {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(90deg, #e05f00, var(--accent) 40%, var(--accent-strong));
+  box-shadow: 0 0 10px rgba(242, 118, 10, 0.5);
+}
+.progress .bar::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    100deg,
+    transparent 20%,
+    rgba(255, 255, 255, 0.45) 50%,
+    transparent 80%
+  );
+  transform: translateX(-110%);
+  animation: bar-shine 1.6s ease-in-out infinite;
+}
+@keyframes bar-shine {
+  to { transform: translateX(110%); }
+}
+
+/* --- 6. Premium empty state --- */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 20px 0 8px;
+}
+.empty-state .empty { margin-top: 6px; }
+.empty-art { width: 138px; max-width: 60vw; height: auto; overflow: visible; }
+.empty-art .art-card-back {
+  fill: var(--surface-2);
+  stroke: var(--muted);
+  stroke-opacity: 0.45;
+  stroke-width: 1.5;
+}
+.empty-art .art-card-front {
+  fill: var(--surface);
+  stroke: var(--accent);
+  stroke-width: 1.5;
+}
+.empty-art .art-line-muted { stroke: var(--muted); opacity: 0.5; }
+.empty-art .art-line-accent { stroke: var(--accent); opacity: 0.75; }
+.empty-art .art-dot { fill: var(--accent-strong); }
+.empty-art .art-badge {
+  fill: var(--accent);
+  filter: drop-shadow(0 4px 10px rgba(242, 118, 10, 0.45));
+}
+.empty-art .fl-a, .empty-art .fl-b, .empty-art .fl-c {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: floaty 6s ease-in-out infinite;
+}
+.empty-art .fl-b { animation-duration: 7.5s; animation-delay: -2s; }
+.empty-art .fl-c { animation-duration: 5s; animation-delay: -1s; }
+@keyframes floaty {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+/* Reduced motion: every v1.2 motion is off (also backstopped by the
+   global reduced-motion rule above). */
+@media (prefers-reduced-motion: reduce) {
+  .aurora { animation: none; }
+  .progress .bar::after { display: none; }
+  .empty-art .fl-a, .empty-art .fl-b, .empty-art .fl-c { animation: none; }
+  .primary-btn:hover, .dl-btn:hover { transform: none; }
+}
+
