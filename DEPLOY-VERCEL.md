@@ -53,3 +53,23 @@ conversion of each type once — that caches all the conversion engines on the
 device. After that it works offline (video/audio additionally downloads its
 FFmpeg engine, ~31 MB, the first time a media conversion runs). Your files
 are never uploaded — conversions always happen on the device itself.
+
+## ⚠️ Never commit `node_modules` (caused a real failed deploy, 2026-10-19)
+
+The repo must contain the project source only — **not** `node_modules` and
+not `dist`. Vercel installs dependencies itself on its Linux builders. If
+`node_modules` (installed on Windows) is pushed, the build dies with:
+
+    sh: line 1: /vercel/path0/node_modules/.bin/tsc: Permission denied
+    Error: Command "npm run build" exited with 126
+
+because the Windows-copied launcher files have no Linux execute permission.
+The project ships a `.gitignore` (node_modules, dist) — keep it in the repo
+root. Fix for an already-polluted repo, from a terminal in the project folder:
+
+    git rm -r --cached node_modules
+    git add .gitignore
+    git commit -m "Stop tracking node_modules"
+    git push
+
+Vercel redeploys automatically on the push, this time with a clean install.

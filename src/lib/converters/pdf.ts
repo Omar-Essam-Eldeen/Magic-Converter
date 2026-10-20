@@ -1,6 +1,16 @@
 import type { AdvancedSettings, OutputFile } from '../../types';
 import { baseName } from '../detect';
 
+/** Re-throw password/encryption failures as the stable code PDF_PASSWORD. */
+function rethrowPdfError(e: unknown): never {
+  const err = e as { name?: string; message?: string } | null;
+  const msg = err?.message || '';
+  if (err?.name === 'PasswordException' || /password|encrypted/i.test(msg)) {
+    throw new Error('PDF_PASSWORD');
+  }
+  throw e;
+}
+
 export interface PdfImageInput {
   bytes: Uint8Array;
   width: number;
@@ -30,7 +40,12 @@ export async function pdfToImages(
   const workerUrl = (await import('pdfjs-dist/build/pdf.worker.min.mjs?url')).default;
   pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
   const data = new Uint8Array(await file.arrayBuffer());
-  const pdf = await pdfjs.getDocument({ data }).promise;
+  let pdf: Awaited<ReturnType<typeof pdfjs.getDocument>['promise']>;
+  try {
+    pdf = await pdfjs.getDocument({ data }).promise;
+  } catch (e) {
+    throw rethrowPdfError(e);
+  }
   const outputs: OutputFile[] = [];
   for (let i = 1; i <= pdf.numPages; i += 1) {
     const page = await pdf.getPage(i);
@@ -56,7 +71,12 @@ export async function mergePdfFiles(files: File[]): Promise<Blob> {
   const { PDFDocument } = await import('pdf-lib');
   const out = await PDFDocument.create();
   for (const f of files) {
-    const src = await PDFDocument.load(new Uint8Array(await f.arrayBuffer()));
+    let src: Awaited<ReturnType<typeof PDFDocument.load>>;
+    try {
+      src = await PDFDocument.load(new Uint8Array(await f.arrayBuffer()));
+    } catch (e) {
+      throw rethrowPdfError(e);
+    }
     const pages = await out.copyPages(src, src.getPageIndices());
     for (const p of pages) out.addPage(p);
   }
@@ -70,7 +90,12 @@ export async function splitPdf(
   adv: AdvancedSettings,
 ): Promise<OutputFile[]> {
   const { PDFDocument } = await import('pdf-lib');
-  const src = await PDFDocument.load(new Uint8Array(await file.arrayBuffer()));
+  let src: Awaited<ReturnType<typeof PDFDocument.load>>;
+  try {
+    src = await PDFDocument.load(new Uint8Array(await file.arrayBuffer()));
+  } catch (e) {
+    throw rethrowPdfError(e);
+  }
   const total = src.getPageCount();
   const fromRaw = parseInt(adv.splitFrom, 10);
   const toRaw = parseInt(adv.splitTo, 10);

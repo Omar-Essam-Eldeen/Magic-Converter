@@ -161,8 +161,8 @@ body {
   background: var(--surface-2); border: 1px solid var(--border); border-radius: 9px;
   padding: 9px 10px; min-height: 40px; width: 100%;
 }
-.adv-grid input:focus, .adv-grid select:focus, .target-select:focus {
-  outline: 2px solid color-mix(in srgb, var(--accent) 55%, transparent); outline-offset: 1px;
+.adv-grid input:focus-visible, .adv-grid select:focus-visible, .target-select:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 1px;
 }
 
 /* ---------- queue ---------- */
@@ -210,4 +210,85 @@ body {
   .brand-tag { display: none; }
   .target-select { min-width: 132px; }
   .q-side { margin-inline-start: 0; }
+}
+
+/* ---------- v1.1: quick convert / presets / naming / a11y ---------- */
+
+/* Visible keyboard focus for every interactive element. */
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.visually-hidden {
+  position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
+  overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%);
+  border: 0; white-space: nowrap;
+}
+
+.text-btn {
+  font: inherit; background: none; border: 0; color: var(--accent-strong);
+  font-size: 13px; font-weight: 600; cursor: pointer;
+  padding: 6px 8px; min-height: 32px; border-radius: 8px;
+}
+.text-btn:hover { color: var(--accent); }
+
+.quick-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.quick-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.quick-chip {
+  display: inline-flex; align-items: stretch;
+  border: 1px solid var(--border); border-radius: 999px;
+  background: var(--surface-2); overflow: hidden;
+  transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+}
+.quick-chip.armed {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface-2));
+  box-shadow: 0 0 0 1px var(--accent);
+}
+.quick-main {
+  font: inherit; background: none; border: 0; color: var(--text); cursor: pointer;
+  font-size: 13px; font-weight: 600; min-height: 36px;
+  padding: 8px 4px 8px 13px;
+}
+[dir='rtl'] .quick-main { padding: 8px 13px 8px 4px; }
+.quick-star {
+  font: inherit; background: none; border: 0; cursor: pointer;
+  min-width: 34px; min-height: 36px; font-size: 15px; line-height: 1;
+  color: var(--muted); padding: 4px 9px 4px 3px;
+}
+[dir='rtl'] .quick-star { padding: 4px 3px 4px 9px; }
+.quick-star[aria-pressed='true'] { color: var(--accent); }
+.quick-hint { color: var(--accent-strong); font-size: 13px; margin: 10px 0 0; }
+
+.adv-presets { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+.adv-presets-label { font-size: 12.5px; color: var(--muted); font-weight: 600; }
+.segmented {
+  display: flex; flex-wrap: wrap; gap: 4px; padding: 4px;
+  background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px;
+}
+.seg-btn {
+  font: inherit; flex: 1 1 100px; border: 0; border-radius: 8px; background: transparent;
+  color: var(--muted); font-size: 13px; font-weight: 600; cursor: pointer;
+  padding: 8px 10px; min-height: 38px;
+  transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+.seg-btn:hover { color: var(--text); }
+.seg-btn[aria-pressed='true'] {
+  background: var(--surface); color: var(--accent-strong);
+  box-shadow: inset 0 0 0 1.5px var(--accent);
+}
+.adv-wide { grid-column: 1 / -1; }
+.adv-hint { font-size: 11.5px; color: var(--muted); font-weight: 500; line-height: 1.5; }
+.shortcut-hint { color: var(--muted); font-size: 12px; }
+
+@media (max-width: 560px) {
+  .adv-grid { grid-template-columns: 1fr; }
+  .seg-btn { flex-basis: 42%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

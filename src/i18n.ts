@@ -1,4 +1,4 @@
-import type { Lang } from './types';
+import type { Category, Lang } from './types';
 
 const en = {
   appName: 'Converter',
@@ -76,8 +76,34 @@ const en = {
   errUnknownType: 'Unknown file type — nothing here can convert it yet.',
   errFfmpeg: 'Media conversion failed (FFmpeg). The file may be corrupt or too large for this device.',
   errGeneric: 'Conversion failed.',
-  errSplitRange: 'Set the split page range in Advanced options first.',
+  errSplitRange: 'No split page range was set. Try this: open Advanced options, fill in “Split from page” and “Split to page”, then convert again.',
   errHeic: 'Could not decode this HEIC file.',
+  errPdfPassword: 'This PDF is password-protected, so it cannot be opened here. Try removing the password first (for example, use “Print to PDF” in your PDF reader), then add the file again.',
+  errEmptyResult: 'The conversion finished but produced no file. Try again, or pick a different output format.',
+  errTooBig: 'This file is very large (over 200 MB), and the conversion could not finish. Try a smaller file, or split it into parts first.',
+  errUnsupportedFull: 'This file cannot be converted to that format. Try choosing a different output format.',
+  errUnknownTypeFull: 'This file type is not recognized, so there is nothing to convert it with yet. Try a common format such as PNG, MP4, PDF or CSV.',
+  errFfmpegFull: 'The media conversion failed. Try a smaller file or a different format — and if this was your first media conversion, check your connection, because the media engine downloads once.',
+  errHeicFull: 'This HEIC photo could not be decoded. Try converting it to JPG in your phone’s Photos app first, then add it again.',
+  errGenericFull: 'Something went wrong while converting this file. Try again — if it keeps failing, try a different output format or a smaller file.',
+  quickTitle: 'Quick convert',
+  quickClear: 'Clear',
+  quickHintArmed: 'Next {cat} file will convert to {target} — drop or pick a file to use it.',
+  favourite: 'Favourite',
+  qualityPreset: 'Quality preset',
+  presetSmall: 'Small file',
+  presetBalanced: 'Balanced',
+  presetBest: 'Best quality',
+  presetCustom: 'Custom',
+  namePattern: 'Output name pattern',
+  namePatternHint: 'Tokens: {name} = original name, {ext} = original extension, {target} = output format, {date} = today (YYYYMMDD), {n} = file number. Leave empty to keep the original names.',
+  targetFormat: 'Output format',
+  targetHtmlTable: 'HTML table',
+  targetHtmlPage: 'HTML page',
+  liveConverted: '{name} converted',
+  liveFailed: '{name} failed: {error}',
+  sharedReceived: '{count} shared file(s) added to the queue',
+  shortcutHint: 'Tip: Ctrl+Enter converts everything',
   notePdfPages: 'pages',
   footerNote: 'Everything runs on this device. The only download ever is a conversion library (FFmpeg) the first time you convert media.',
 };
@@ -160,10 +186,46 @@ const ar: Strings = {
   errUnknownType: 'نوع ملف غير معروف — لا يوجد هنا ما يحوّله بعد.',
   errFfmpeg: 'فشل تحويل الوسائط (FFmpeg). قد يكون الملف تالفًا أو كبيرًا جدًا على هذا الجهاز.',
   errGeneric: 'فشل التحويل.',
-  errSplitRange: 'حدّد نطاق صفحات التقسيم في الخيارات المتقدمة أولًا.',
+  errSplitRange: 'لم تُضبط صفحات التقسيم. جرّب هذا: افتح الخيارات المتقدمة واملأ «تقسيم من صفحة» و«تقسيم إلى صفحة»، ثم حوّل من جديد.',
   errHeic: 'تعذّرت قراءة ملف HEIC هذا.',
+  errPdfPassword: 'ملف PDF هذا محمي بكلمة مرور، فلا يمكن فتحه هنا. جرّب إزالة كلمة المرور أولًا (مثلًا عبر «الطباعة إلى PDF» في قارئ PDF لديك)، ثم أضف الملف من جديد.',
+  errEmptyResult: 'انتهى التحويل دون إنتاج أي ملف. جرّب مرة أخرى أو اختر تنسيق إخراج مختلفًا.',
+  errTooBig: 'هذا الملف كبير جدًا (أكثر من ٢٠٠ ميجابايت) ولم يكتمل التحويل. جرّب ملفًا أصغر أو قسّمه إلى أجزاء أولًا.',
+  errUnsupportedFull: 'لا يمكن تحويل هذا الملف إلى هذا التنسيق. جرّب اختيار تنسيق إخراج مختلف.',
+  errUnknownTypeFull: 'نوع الملف هذا غير معروف، فلا توجد أداة لتحويله بعد. جرّب تنسيقًا شائعًا مثل PNG أو MP4 أو PDF أو CSV.',
+  errFfmpegFull: 'فشل تحويل الوسائط. جرّب ملفًا أصغر أو تنسيقًا مختلفًا — وإذا كانت هذه أول مرة تحوّل فيها وسائط، فتَحقّق من اتصالك، إذ يُنزَّل محرك الوسائط مرة واحدة فقط.',
+  errHeicFull: 'تعذّرت قراءة صورة HEIC هذه. جرّب تحويلها إلى JPG من تطبيق الصور في هاتفك أولًا، ثم أضفها من جديد.',
+  errGenericFull: 'حدث خطأ أثناء تحويل هذا الملف. جرّب مرة أخرى — وإذا استمر الفشل، فجرّب تنسيق إخراج مختلفًا أو ملفًا أصغر.',
+  quickTitle: 'تحويل سريع',
+  quickClear: 'مسح',
+  quickHintArmed: 'ملف {cat} التالي سيُحوَّل إلى {target} — أسقط ملفًا أو اختره للاستخدام.',
+  favourite: 'المفضلة',
+  qualityPreset: 'إعداد الجودة',
+  presetSmall: 'ملف صغير',
+  presetBalanced: 'متوازن',
+  presetBest: 'أفضل جودة',
+  presetCustom: 'مخصص',
+  namePattern: 'نمط اسم ملف الإخراج',
+  namePatternHint: 'الرموز: {name} = الاسم الأصلي، {ext} = الامتداد الأصلي، {target} = تنسيق الإخراج، {date} = تاريخ اليوم (YYYYMMDD)، {n} = رقم الملف. اتركه فارغًا للإبقاء على الأسماء الأصلية.',
+  targetFormat: 'تنسيق الإخراج',
+  targetHtmlTable: 'جدول HTML',
+  targetHtmlPage: 'صفحة HTML',
+  liveConverted: 'تم تحويل {name}',
+  liveFailed: 'فشل تحويل {name}: {error}',
+  sharedReceived: 'أُضيف {count} ملف مشترك إلى القائمة',
+  shortcutHint: 'تلميح: Ctrl+Enter يحوِّل كل شيء',
   notePdfPages: 'صفحة',
   footerNote: 'كل شيء يعمل على هذا الجهاز. التنزيل الوحيد أبدًا هو مكتبة تحويل (FFmpeg) في أول مرة تحوّل فيها وسائط.',
 };
 
 export const STRINGS: Record<Lang, Strings> = { en, ar };
+
+/**
+ * Category-aware label for a conversion target. Most targets share one
+ * label, but 'html' differs: data files become an "HTML table" while text
+ * files become an "HTML page".
+ */
+export function targetLabel(t: Strings, category: Category, target: string): string {
+  if (target === 'html') return category === 'text' ? t.targetHtmlPage : t.targetHtmlTable;
+  return t.target[target] || target.toUpperCase();
+}
