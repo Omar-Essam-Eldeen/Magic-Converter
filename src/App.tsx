@@ -669,7 +669,7 @@ export default function App() {
           className={`dropzone${dragOver ? ' drag' : ''}`}
           role="button"
           tabIndex={0}
-          aria-label={t.dropTitle}
+          aria-labelledby="dz-title dz-hint"
           onClick={() => fileInputRef.current?.click()}
           onPointerMove={onDzPointerMove}
           onPointerLeave={onDzPointerLeave}
@@ -693,19 +693,19 @@ export default function App() {
               <path d="M12 3v10" /><path d="M7 8l5-5 5 5" /><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" />
             </svg>
           </div>
-          <div className="dz-title">{dragOver ? t.dropActive : t.dropTitle}</div>
-          <div className="dz-hint">{t.dropHint}</div>
-          <input
-            ref={fileInputRef}
-            type="file"
-            multiple
-            hidden
-            onChange={(e) => {
-              if (e.target.files?.length) addFiles(e.target.files);
-              e.target.value = '';
-            }}
-          />
+          <div className="dz-title" id="dz-title">{dragOver ? t.dropActive : t.dropTitle}</div>
+          <div className="dz-hint" id="dz-hint">{t.dropHint}</div>
         </section>
+        <input
+          ref={fileInputRef}
+          type="file"
+          multiple
+          hidden
+          onChange={(e) => {
+            if (e.target.files?.length) addFiles(e.target.files);
+            e.target.value = '';
+          }}
+        />
 
         {quickList.length > 0 && (
           <section className="card">
