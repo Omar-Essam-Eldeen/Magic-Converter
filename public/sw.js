@@ -5,7 +5,7 @@
    deliberately NOT intercepted or cached here. Bump CACHE_NAME on release.
    It also handles the Web Share Target POST (/share-target): shared files
    are parked in IndexedDB for the app to pick up on launch. */
-const CACHE_NAME = 'converter-app-v6';
+const CACHE_NAME = 'converter-app-v7';
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
