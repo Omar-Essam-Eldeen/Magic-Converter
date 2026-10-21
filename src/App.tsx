@@ -14,7 +14,7 @@ import {
 import { applyNamePattern } from './lib/naming';
 import { explainError } from './lib/errors';
 import { takeSharedFiles } from './lib/shareInbox';
-import { notifySupported, requestNotifyPermission, showDoneNotification } from './lib/notify';
+import { isNative, notifySupported, requestNotifyPermission, showDoneNotification } from './lib/notify';
 import Logo, { LogoGlyph } from './components/Logo';
 import CategoryIcon from './components/CategoryIcon';
 
@@ -346,7 +346,15 @@ export default function App() {
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const minShow = reduced ? 150 : 1100;
     const wait = Math.max(0, minShow - performance.now());
-    const t1 = window.setTimeout(() => el.classList.add('done'), wait);
+    const t1 = window.setTimeout(() => {
+      el.classList.add('done');
+      // Native app: dismiss the OS splash screen as the web splash fades.
+      if (isNative()) {
+        void import('@capacitor/splash-screen')
+          .then(({ SplashScreen }) => SplashScreen.hide())
+          .catch(() => undefined);
+      }
+    }, wait);
     const t2 = window.setTimeout(() => el.remove(), wait + 750);
     return () => {
       window.clearTimeout(t1);
