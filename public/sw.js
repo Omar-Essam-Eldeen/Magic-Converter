@@ -5,7 +5,7 @@
    deliberately NOT intercepted or cached here. Bump CACHE_NAME on release.
    It also handles the Web Share Target POST (/share-target): shared files
    are parked in IndexedDB for the app to pick up on launch. */
-const CACHE_NAME = 'converter-app-v7';
+const CACHE_NAME = 'converter-app-v8';
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -79,6 +79,21 @@ async function handleShareTarget(request) {
     return Response.redirect('/?shared=0', 303);
   }
 }
+
+/* Done-notifications: clicking one focuses the app (or opens it). */
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  event.waitUntil(
+    self.clients
+      .matchAll({ type: 'window', includeUncontrolled: true })
+      .then((list) => {
+        for (const client of list) {
+          if ('focus' in client) return client.focus();
+        }
+        return self.clients.openWindow('/');
+      }),
+  );
+});
 
 self.addEventListener('fetch', (event) => {
   const { request } = event;
