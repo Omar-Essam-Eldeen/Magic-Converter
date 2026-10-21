@@ -14,6 +14,7 @@ import {
 import { applyNamePattern } from './lib/naming';
 import { explainError } from './lib/errors';
 import { takeSharedFiles } from './lib/shareInbox';
+import { notifySupported, requestNotifyPermission, showDoneNotification } from './lib/notify';
 import Logo, { LogoGlyph } from './components/Logo';
 import CategoryIcon from './components/CategoryIcon';
 
@@ -35,6 +36,8 @@ interface Prefs {
   advanced: AdvancedSettings;
   /** derived from `advanced`; persisted for convenience */
   qualityPreset: QualityPresetChoice;
+  /** show a system notification when conversions finish (v1.4) */
+  notifyDone: boolean;
 }
 
 const PRESET_VALUES: Record<PresetKey, Pick<AdvancedSettings, 'quality' | 'maxDim' | 'gifFps' | 'gifWidth'>> = {
@@ -90,6 +93,7 @@ function loadPrefs(): Prefs {
     namePattern: '',
     advanced: { ...DEFAULT_ADVANCED, ...PRESET_VALUES.balanced },
     qualityPreset: 'balanced',
+    notifyDone: false,
   };
   try {
     const raw = localStorage.getItem(PREFS_KEY);
@@ -113,6 +117,7 @@ function loadPrefs(): Prefs {
       namePattern: typeof p.namePattern === 'string' ? p.namePattern : '',
       advanced,
       qualityPreset: matchPreset(advanced) ?? 'custom',
+      notifyDone: (p as Record<string, unknown>).notifyDone === true,
     };
   } catch {
     return fresh;
@@ -219,6 +224,13 @@ export default function App() {
   const [history, setHistory] = useState<HistoryEntry[]>(() => loadHistory());
   const [armed, setArmedState] = useState<ArmedRoute | null>(null);
   const [announce, setAnnounce] = useState('');
+  const [notifyNote, setNotifyNote] = useState('');
+  /** Tracks a running Convert-all batch so done-notifications aggregate. */
+  const batchRef = useRef<{ active: boolean; done: number; lastName: string }>({
+    active: false,
+    done: 0,
+    lastName: '',
+  });
   const fileInputRef = useRef<HTMLInputElement>(null);
   const itemsRef = useRef<QueueItem[]>([]);
   itemsRef.current = items;
@@ -464,6 +476,15 @@ export default function App() {
         patchItem(item.id, { status: 'done', progress: 1, outputs: named, note: undefined });
         setHistory(recordUse(item.category, item.target));
         setAnnounce(t.liveConverted.replace('{name}', item.file.name));
+        if (batchRef.current.active) {
+          batchRef.current.done += 1;
+          batchRef.current.lastName = item.file.name;
+        } else if (prefsRef.current.notifyDone) {
+          void showDoneNotification(
+            t.notifyTitle,
+            t.notifyBodyOne.replace('{name}', item.file.name),
+          );
+        }
       } catch (e) {
         const raw = e instanceof Error ? e.message : '';
         const msg = explainError(raw, item, t);
@@ -479,6 +500,7 @@ export default function App() {
   const convertAll = useCallback(async () => {
     if (busy) return;
     setBusy(true);
+    batchRef.current = { active: true, done: 0, lastName: '' };
     try {
       for (const item of itemsRef.current) {
         if (item.status === 'done') continue;
@@ -489,7 +511,17 @@ export default function App() {
         await convertItem(item);
       }
     } finally {
+      const { done, lastName } = batchRef.current;
+      batchRef.current.active = false;
       setBusy(false);
+      if (prefsRef.current.notifyDone && done > 0) {
+        void showDoneNotification(
+          t.notifyTitle,
+          done === 1
+            ? t.notifyBodyOne.replace('{name}', lastName)
+            : t.notifyBodyMany.replace('{count}', String(done)),
+        );
+      }
     }
   }, [busy, convertItem, patchItem, t]);
 
@@ -513,6 +545,25 @@ export default function App() {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, []);
+
+  const onToggleNotify = useCallback(
+    async (checked: boolean) => {
+      if (!checked) {
+        setPrefs((p) => ({ ...p, notifyDone: false }));
+        setNotifyNote('');
+        return;
+      }
+      const perm = await requestNotifyPermission();
+      if (perm === 'granted') {
+        setPrefs((p) => ({ ...p, notifyDone: true }));
+        setNotifyNote('');
+      } else {
+        setPrefs((p) => ({ ...p, notifyDone: false }));
+        setNotifyNote(t.notifyBlocked);
+      }
+    },
+    [t],
+  );
 
   const allOutputs = useMemo(
     () => items.filter((i) => i.status === 'done').flatMap((i) => i.outputs),
@@ -808,6 +859,20 @@ export default function App() {
                   <span className="adv-hint">{t.namePatternHint}</span>
                 </label>
               </div>
+              <label className="adv-wide notify-row">
+                <input
+                  type="checkbox"
+                  checked={prefs.notifyDone}
+                  disabled={!notifySupported()}
+                  onChange={(e) => void onToggleNotify(e.target.checked)}
+                />
+                <span>
+                  {t.notifyLabel}
+                  <span className="adv-hint">
+                    {!notifySupported() ? t.notifyUnsupported : notifyNote || t.notifyHint}
+                  </span>
+                </span>
+              </label>
             </>
           )}
         </section>
