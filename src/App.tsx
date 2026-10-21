@@ -339,6 +339,21 @@ export default function App() {
     [],
   );
 
+  // Boot splash (in index.html): hold briefly, then fade out and remove.
+  useEffect(() => {
+    const el = document.getElementById('boot-splash');
+    if (!el) return;
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const minShow = reduced ? 150 : 1100;
+    const wait = Math.max(0, minShow - performance.now());
+    const t1 = window.setTimeout(() => el.classList.add('done'), wait);
+    const t2 = window.setTimeout(() => el.remove(), wait + 750);
+    return () => {
+      window.clearTimeout(t1);
+      window.clearTimeout(t2);
+    };
+  }, []);
+
   useEffect(() => {
     try {
       localStorage.setItem(PREFS_KEY, JSON.stringify(prefs));
