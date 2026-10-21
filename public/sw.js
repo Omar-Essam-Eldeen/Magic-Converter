@@ -5,13 +5,13 @@
    deliberately NOT intercepted or cached here. Bump CACHE_NAME on release.
    It also handles the Web Share Target POST (/share-target): shared files
    are parked in IndexedDB for the app to pick up on launch. */
-const CACHE_NAME = 'converter-app-v8';
+const CACHE_NAME = 'converter-app-v9';
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches
       .open(CACHE_NAME)
-      .then((cache) => cache.addAll(['/', '/index.html', '/manifest.webmanifest']))
+      .then((cache) => cache.addAll(['/', '/index.html', '/manifest.webmanifest', '/splash.jpg', '/icons/icon-192.png']))
       .then(() => self.skipWaiting())
       .catch(() => undefined),
   );
